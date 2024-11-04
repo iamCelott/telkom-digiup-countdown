@@ -18,28 +18,36 @@ func handleIndex(w http.ResponseWriter, r * http.Request) {
 	http.ServeFile(w,r, "views/index.html")
 }
 
-func handleTime(w http.ResponseWriter, r * http.Request) {
+func handleTime(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
-
-	targetTime := time.Date(now.Year(), now.Month(), now.Day(), 17, 30, 0, 0, now.Location())	
-	endTime := time.Date(2024, time.November, 9, 17, 30, 0, 0, now.Location())	
+	
+	targetTime := time.Date(now.Year(), now.Month(), now.Day(), 17, 30, 0, 0, now.Location())
+	
+	endTime := time.Date(2024, time.November, 4, 17, 30, 0, 0, now.Location())
 
 	response := CountdownResponse{}
 
-	if now.Before(endTime) || now.Equal(endTime) {
-		if now.After(targetTime) {
-			targetTime = targetTime.Add(24 * time.Hour)
-		}
-	
-		duration := targetTime.Sub(now)
-	
-		response.Hour = int(duration.Hours()) % 24
-		response.Minute = int(duration.Minutes()) % 60
-		response.Second = int(duration.Seconds()) % 60
-	} else {
+	if now.After(endTime) {
 		response.Message = "The target day has passed."
+	} else {
+		if now.After(targetTime) {
+			nextDay := now.Add(24 * time.Hour)
+			targetTime = time.Date(nextDay.Year(), nextDay.Month(), nextDay.Day(), 13, 0, 0, 0, nextDay.Location())
+		}
+
+		duration := targetTime.Sub(now)
+
+		if duration > 0 {
+			response.Hour = int(duration.Hours()) % 24
+			response.Minute = int(duration.Minutes()) % 60
+			response.Second = int(duration.Seconds()) % 60
+		} else {
+			response.Hour = 0
+			response.Minute = 0
+			response.Second = 0
+		}
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
