@@ -15,7 +15,7 @@ type CountdownResponse struct {
 }
 	
 func handleIndex(w http.ResponseWriter, r * http.Request) {
-	fmt.Fprint(w, "Server Started...")
+	http.ServeFile(w,r, "views/index.html")
 }
 
 func handleTime(w http.ResponseWriter, r * http.Request) {
